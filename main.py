@@ -1,4 +1,3 @@
-import aiogram.types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
