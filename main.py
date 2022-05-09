@@ -125,35 +125,37 @@ def open_order_long(quantity, TP, SL):
 def threading_main():
     db_postgres = psycopg2.connect(os.environ['DATABASE_URL'], sslmode="require")
     cursor = db_postgres.cursor()
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_SHORT_MA'")
-    SELL_SHORT_MA = int(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_LONG_MA'")
-    SELL_LONG_MA = int(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_SHORT_MA'")
-    BUY_SHORT_MA = int(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_LONG_MA'")
-    BUY_LONG_MA = int(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'QUANTITY_BTC'")
-    QUANTITY_BTC = float(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'PERCENT_DIF_MA'")
-    PERCENT_DIF_MA = float(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_BUY'")
-    TP_BUY = float(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
-    SL_BUY = float(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_SELL'")
-    TP_SELL = float(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
-    SL_SELL = float(cursor.fetchone()[0])
-    cursor.execute("SELECT Value FROM Parameters where Parameter = 'TIMEFRAME'")
-    TIMEFRAME = str(cursor.fetchone()[0])
-
-    limit = max(SELL_LONG_MA, BUY_LONG_MA) + 10
     while True:
+        """Получаем параметры стратегии и узнаем открывать ли сделки"""
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_SHORT_MA'")
+        SELL_SHORT_MA = int(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_LONG_MA'")
+        SELL_LONG_MA = int(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_SHORT_MA'")
+        BUY_SHORT_MA = int(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_LONG_MA'")
+        BUY_LONG_MA = int(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'QUANTITY_BTC'")
+        QUANTITY_BTC = float(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'PERCENT_DIF_MA'")
+        PERCENT_DIF_MA = float(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_BUY'")
+        TP_BUY = float(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
+        SL_BUY = float(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_SELL'")
+        TP_SELL = float(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
+        SL_SELL = float(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'TIMEFRAME'")
+        TIMEFRAME = str(cursor.fetchone()[0])
+        cursor.execute("SELECT Value FROM Parameters where Parameter = 'WORK'")
+        WORK = int(cursor.fetchone()[0])
+        limit = max(SELL_LONG_MA, BUY_LONG_MA) + 10
         try:
-            cursor.execute("SELECT Value FROM Parameters where Parameter = 'WORK'")
-            WORK = int(cursor.fetchone()[0])
+            """Если торговый бот запущен смотрим нужно ли открвать сделки"""
             if WORK == 1:
+                print(1)
                 last_110MA = bot.futuresKlines(symbol='BTCUSDT', interval=TIMEFRAME, limit=limit)
                 Present = get_change(math.floor(MA_calc(SELL_LONG_MA, last_110MA)),
                                      math.floor(MA_calc(SELL_SHORT_MA, last_110MA)))
@@ -177,7 +179,7 @@ def threading_main():
                     except:
                         pass
             else:
-                break
+                pass
         except:
             pass
         time.sleep(15)
@@ -193,7 +195,6 @@ async def get_text_messages(msg: types.Message):
         await msg.answer(f'{msg.from_user.first_name} все под контролем 👌, работаем.', reply_markup=Keyboard)
         cursor.execute(f"UPDATE Parameters SET Value = '1' WHERE Parameter = 'WORK'")
         db_postgres.commit()
-        threading.Thread(target=threading_main).start()
 
     if msg.text.lower() == 'стоп' and msg.from_user.id == 431679317:
         Keyboard = ReplyKeyboardMarkup(resize_keyboard=True).\
@@ -477,4 +478,6 @@ async def get_text_messages(msg: types.Message):
 
                 await state.finish()
 
-executor.start_polling(dp)
+if __name__ == "__main__":
+    threading.Thread(target=threading_main).start()
+    executor.start_polling(dp)
