@@ -203,8 +203,6 @@ async def get_text_messages(msg: types.Message):
         cursor.execute(f"UPDATE Parameters SET Value = '0' WHERE Parameter = 'WORK'")
         db_postgres.commit()
 
-    if msg.text.lower() == 'шорт' and msg.from_user.id == 431679317:
-        open_order_short(quantity=0.001, TP=1, SL=0.6)
     if msg.text.lower() == 'посмотреть параметры' and msg.from_user.id == 431679317:
         cursor.execute('SELECT * FROM Parameters')
         param = cursor.fetchall()
