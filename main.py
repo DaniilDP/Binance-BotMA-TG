@@ -148,7 +148,7 @@ def threading_main():
         cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
         SL_SELL = float(cursor.fetchone()[0])
         cursor.execute("SELECT Value FROM Parameters where Parameter = 'TIMEFRAME'")
-        TIMEFRAME = str(cursor.fetchone()[0])
+        TIMEFRAME = str(cursor.fetchone()[0]).strip()
         cursor.execute("SELECT Value FROM Parameters where Parameter = 'WORK'")
         WORK = int(cursor.fetchone()[0])
         limit = max(SELL_LONG_MA, BUY_LONG_MA) + 10
