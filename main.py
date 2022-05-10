@@ -21,7 +21,7 @@ API_KEY = cursor.fetchone()[0]
 cursor.execute("SELECT Value FROM Parameters where Parameter = 'API_SECRET'")
 API_SECRET = cursor.fetchone()[0]
 
-bot = Binance(API_KEY=str(API_KEY), API_SECRET=str(API_SECRET))
+bot = Binance(API_KEY=str(API_KEY.strip()), API_SECRET=str(API_SECRET.strip()))
 
 bot_tg = Bot(os.environ['BOT_TOKEN'])
 dp = Dispatcher(bot_tg, storage=MemoryStorage())
@@ -155,7 +155,6 @@ def threading_main():
         try:
             """Если торговый бот запущен смотрим нужно ли открвать сделки"""
             if WORK == 1:
-                print(1)
                 last_110MA = bot.futuresKlines(symbol='BTCUSDT', interval=TIMEFRAME, limit=limit)
                 Present = get_change(math.floor(MA_calc(SELL_LONG_MA, last_110MA)),
                                      math.floor(MA_calc(SELL_SHORT_MA, last_110MA)))
@@ -204,6 +203,8 @@ async def get_text_messages(msg: types.Message):
         cursor.execute(f"UPDATE Parameters SET Value = '0' WHERE Parameter = 'WORK'")
         db_postgres.commit()
 
+    if msg.text.lower() == 'шорт' and msg.from_user.id == 431679317:
+        open_order_short(quantity=0.001, TP=1, SL=0.6)
     if msg.text.lower() == 'посмотреть параметры' and msg.from_user.id == 431679317:
         cursor.execute('SELECT * FROM Parameters')
         param = cursor.fetchall()
