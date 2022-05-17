@@ -25,6 +25,7 @@ bot = Binance(API_KEY=str(API_KEY.strip()), API_SECRET=str(API_SECRET.strip()))
 
 bot_tg = Bot(os.environ['BOT_TOKEN'])
 dp = Dispatcher(bot_tg, storage=MemoryStorage())
+symbol = 'BTCBUSD'
 
 def get_change(current, previous):
     check = []
@@ -52,23 +53,23 @@ def tp_and_sl(procent, plus, price):
     if plus == '+':
         x = price
         x = x + ((x/100) * procent)
-        return round(x, 2)
+        return round(x, 1)
     if plus == '-':
         x = price
         x = x - ((x/100) * procent)
-        return round(x, 2)
+        return round(x, 1)
 
 def open_order_short(quantity, TP, SL):
     bot.futuresCreateOrder(
-        symbol='BTCUSDT',
+        symbol=symbol,
         side='SELL',
         type='MARKET',
         recvWindow=5000,
         quantity =quantity)
-    prices = float(bot.futuresSymbolPriceTicker(symbol='BTCUSDT')['price'])
+    prices = float(bot.futuresSymbolPriceTicker(symbol=symbol)['price'])
     time.sleep(3)
     bot.futuresCreateOrder(
-        symbol='BTCUSDT',
+        symbol=symbol,
         side='BUY',
         positionSide='BOTH',
         type='TAKE_PROFIT_MARKET',
@@ -78,7 +79,7 @@ def open_order_short(quantity, TP, SL):
         workingType='MARK_PRICE',
         priceProtect=True)
     bot.futuresCreateOrder(
-        symbol='BTCUSDT',
+        symbol=symbol,
         side='BUY',
         positionSide='BOTH',
         type='STOP_MARKET',
@@ -92,16 +93,16 @@ def open_order_short(quantity, TP, SL):
 def open_order_long(quantity, TP, SL):
 
     bot.futuresCreateOrder(
-        symbol='BTCUSDT',
+        symbol=symbol,
         side='BUY',
         type='MARKET',
         recvWindow=5000,
         quantity =quantity)
 
-    prices = float(bot.futuresSymbolPriceTicker(symbol='BTCUSDT')['price'])
+    prices = float(bot.futuresSymbolPriceTicker(symbol=symbol)['price'])
     time.sleep(3)
     bot.futuresCreateOrder(
-        symbol='BTCUSDT',
+        symbol=symbol,
         side='SELL',
         positionSide='BOTH',
         type='TAKE_PROFIT_MARKET',
@@ -111,7 +112,7 @@ def open_order_long(quantity, TP, SL):
         workingType='MARK_PRICE',
         priceProtect=True)
     bot.futuresCreateOrder(
-        symbol='BTCUSDT',
+        symbol=symbol,
         side='SELL',
         positionSide='BOTH',
         type='STOP_MARKET',
@@ -126,61 +127,69 @@ def threading_main():
     db_postgres = psycopg2.connect(os.environ['DATABASE_URL'], sslmode="require")
     cursor = db_postgres.cursor()
     while True:
-        """Получаем параметры стратегии и узнаем открывать ли сделки"""
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_SHORT_MA'")
-        SELL_SHORT_MA = int(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_LONG_MA'")
-        SELL_LONG_MA = int(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_SHORT_MA'")
-        BUY_SHORT_MA = int(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_LONG_MA'")
-        BUY_LONG_MA = int(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'QUANTITY_BTC'")
-        QUANTITY_BTC = float(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'PERCENT_DIF_MA'")
-        PERCENT_DIF_MA = float(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_BUY'")
-        TP_BUY = float(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
-        SL_BUY = float(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_SELL'")
-        TP_SELL = float(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
-        SL_SELL = float(cursor.fetchone()[0])
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'TIMEFRAME'")
-        TIMEFRAME = str(cursor.fetchone()[0]).strip()
-        cursor.execute("SELECT Value FROM Parameters where Parameter = 'WORK'")
-        WORK = int(cursor.fetchone()[0])
-        limit = max(SELL_LONG_MA, BUY_LONG_MA) + 10
         try:
-            """Если торговый бот запущен смотрим нужно ли открвать сделки"""
+            """Получаем параметры стратегии и узнаем открывать ли сделки"""
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_SHORT_MA'")
+            SELL_SHORT_MA = int(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'SELL_LONG_MA'")
+            SELL_LONG_MA = int(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_SHORT_MA'")
+            BUY_SHORT_MA = int(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'BUY_LONG_MA'")
+            BUY_LONG_MA = int(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'QUANTITY_BTC'")
+            QUANTITY_BTC = float(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'PERCENT_DIF_MA'")
+            PERCENT_DIF_MA = float(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_BUY'")
+            TP_BUY = float(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
+            SL_BUY = float(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'TP_SELL'")
+            TP_SELL = float(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'SL_BUY'")
+            SL_SELL = float(cursor.fetchone()[0])
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'TIMEFRAME'")
+            TIMEFRAME = str(cursor.fetchone()[0]).strip()
+            cursor.execute("SELECT Value FROM Parameters where Parameter = 'WORK'")
+            WORK = int(cursor.fetchone()[0])
+            limit = max(SELL_LONG_MA, BUY_LONG_MA) + 10
+        except:
+            print('[LOG] Ошибка работы базы данных')
+
+        """Если торговый бот запущен смотрим нужно ли открвать сделки"""
+        try:
             if WORK == 1:
-                last_110MA = bot.futuresKlines(symbol='BTCUSDT', interval=TIMEFRAME, limit=limit)
+                last_110MA = bot.futuresKlines(symbol=symbol, interval=TIMEFRAME, limit=limit)
                 Present = get_change(math.floor(MA_calc(SELL_LONG_MA, last_110MA)),
                                      math.floor(MA_calc(SELL_SHORT_MA, last_110MA)))
                 Past = get_change(math.floor(MA_back_in_future(SELL_LONG_MA, last_110MA)),
                                   math.floor(MA_back_in_future(SELL_SHORT_MA, last_110MA)))
-                positions = float([i for i in bot.futuresAccount()['positions'] if i['symbol'] == 'BTCUSDT'][0]['entryPrice'])
+                try:
+                    positions = float([i for i in bot.futuresAccount()['positions'] if i['symbol'] == symbol][0]['entryPrice'])
+                    print(positions)
+                except:
+                    print('[LOG] Ошибка запроса об открытых позиций')
+                    positions = 1
                 if Present <= PERCENT_DIF_MA and Present > 0 and Past > PERCENT_DIF_MA and positions == 0:
-                    try:
-                        open_order_short(quantity = QUANTITY_BTC, TP = TP_SELL, SL = SL_SELL)
-                    except:
-                        pass
+                    open_order_short(quantity = QUANTITY_BTC, TP = TP_SELL, SL = SL_SELL)
 
                 Present = get_change(math.floor(MA_calc(BUY_SHORT_MA, last_110MA)),
                                      math.floor(MA_calc(BUY_LONG_MA, last_110MA)))
                 Past = get_change(math.floor(MA_back_in_future(BUY_SHORT_MA, last_110MA)),
                                   math.floor(MA_back_in_future(BUY_LONG_MA, last_110MA)))
-                positions = float([i for i in bot.futuresAccount()['positions'] if i['symbol'] == 'BTCUSDT'][0]['entryPrice'])
+                try:
+                    positions = float([i for i in bot.futuresAccount()['positions'] if i['symbol'] == symbol][0]['entryPrice'])
+                except:
+                    print('[LOG] Ошибка запроса об открытых позиций')
+                    positions = 1
                 if Present <= PERCENT_DIF_MA and Present > 0 and Past > PERCENT_DIF_MA and positions == 0:
-                    try:
-                        open_order_long(quantity = QUANTITY_BTC, TP = TP_BUY, SL = SL_BUY)
-                    except:
-                        pass
+                    open_order_long(quantity = QUANTITY_BTC, TP = TP_BUY, SL = SL_BUY)
             else:
                 pass
         except:
-            pass
+            print('[LOG] Ошибка работы')
+
         time.sleep(15)
 
 @dp.message_handler(content_types=['text'])
