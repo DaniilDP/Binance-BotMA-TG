@@ -483,7 +483,6 @@ async def get_text_messages(msg: types.Message):
                     db_postgres.commit()
 
                     await message.answer(f"Изменено на: {user_message}")
-
                 await state.finish()
 
 if __name__ == "__main__":
