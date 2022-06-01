@@ -34,6 +34,7 @@ def get_change(current, previous):
     check = pd.Series(check)
     return round(check.pct_change()[1], 4)
 
+
 def MA_back_in_future(summ, last_110):
     MA = 0
     last_110 = last_110[-(summ+1):]
@@ -42,12 +43,14 @@ def MA_back_in_future(summ, last_110):
         MA += float(sv[4])
     return MA / summ
 
+
 def MA_calc(summ, last_110):
     MA = 0
     last_110 = last_110[-summ:]
     for sv in last_110:
         MA += float(sv[4])
     return MA/summ
+
 
 def tp_and_sl(procent, plus, price):
     if plus == '+':
@@ -58,6 +61,7 @@ def tp_and_sl(procent, plus, price):
         x = price
         x = x - ((x/100) * procent)
         return round(x, 1)
+
 
 def open_order_short(quantity, TP, SL):
     bot.futuresCreateOrder(
@@ -89,6 +93,7 @@ def open_order_short(quantity, TP, SL):
         workingType='MARK_PRICE',
         priceProtect=True)
     time.sleep(3)
+
 
 def open_order_long(quantity, TP, SL):
 
@@ -122,6 +127,7 @@ def open_order_long(quantity, TP, SL):
         workingType='MARK_PRICE',
         priceProtect=True)
     time.sleep(3)
+
 
 def threading_main():
     db_postgres = psycopg2.connect(os.environ['DATABASE_URL'], sslmode="require")
@@ -191,6 +197,7 @@ def threading_main():
             print('[LOG] Ошибка работы')
 
         time.sleep(15)
+
 
 @dp.message_handler(content_types=['text'])
 async def get_text_messages(msg: types.Message):
@@ -484,6 +491,7 @@ async def get_text_messages(msg: types.Message):
 
                     await message.answer(f"Изменено на: {user_message}")
                 await state.finish()
+
 
 if __name__ == "__main__":
     threading.Thread(target=threading_main).start()
